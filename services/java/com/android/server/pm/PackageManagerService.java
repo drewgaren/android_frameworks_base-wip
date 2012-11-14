@@ -86,6 +86,7 @@ import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
+import android.content.pm.SELinuxMMAC;
 import android.content.pm.ServiceInfo;
 import android.content.pm.Signature;
 import android.content.pm.ManifestDigest;
@@ -361,6 +362,9 @@ public class PackageManagerService extends IPackageManager.Stub {
     // etc/permissions.xml file.
     final HashMap<String, FeatureInfo> mAvailableFeatures =
             new HashMap<String, FeatureInfo>();
+
+    // If mac_permissions.xml was found for seinfo labeling.
+    boolean mFoundPolicyFile;
 
     // All available activities, for your resolving pleasure.
     final ActivityIntentResolver mActivities =
@@ -1163,6 +1167,13 @@ public class PackageManagerService extends IPackageManager.Stub {
                     }
                 }
             }
+
+            // Find potential SELinux install policy
+            long startPolicyTime = SystemClock.uptimeMillis();
+            mFoundPolicyFile = SELinuxMMAC.readInstallPolicy();
+            Slog.i(TAG, "Time to scan SELinux install policy: "
+                   + ((SystemClock.uptimeMillis()-startPolicyTime)/1000f)
+                   + " seconds");
 
             // Find base frameworks (resource packages without code).
             mFrameworkInstallObserver = new AppDirObserver(
@@ -3611,9 +3622,9 @@ public class PackageManagerService extends IPackageManager.Stub {
         }
     }
 
-    private int createDataDirsLI(String packageName, int uid) {
+    private int createDataDirsLI(String packageName, int uid, String seinfo) {
         int[] users = sUserManager.getUserIds();
-        int res = mInstaller.install(packageName, uid, uid);
+        int res = mInstaller.install(packageName, uid, uid, seinfo);
         if (res < 0) {
             return res;
         }
@@ -3659,6 +3670,10 @@ public class PackageManagerService extends IPackageManager.Stub {
             return null;
         }
         mScanningPath = scanFile;
+
+        if (mFoundPolicyFile) {
+            SELinuxMMAC.assignSeinfoValue(pkg);
+        }
 
         if ((parseFlags&PackageParser.PARSE_IS_SYSTEM) != 0) {
             pkg.applicationInfo.flags |= ApplicationInfo.FLAG_SYSTEM;
@@ -4028,7 +4043,8 @@ public class PackageManagerService extends IPackageManager.Stub {
                             recovered = true;
 
                             // And now re-install the app.
-                            ret = createDataDirsLI(pkgName, pkg.applicationInfo.uid);
+                            ret = createDataDirsLI(pkgName, pkg.applicationInfo.uid,
+                                                   pkg.applicationInfo.seinfo);
                             if (ret == -1) {
                                 // Ack should not happen!
                                 msg = prefix + pkg.packageName
@@ -4074,7 +4090,8 @@ public class PackageManagerService extends IPackageManager.Stub {
                         Log.v(TAG, "Want this data dir: " + dataPath);
                 }
                 //invoke installer to do the actual installation
-                int ret = createDataDirsLI(pkgName, pkg.applicationInfo.uid);
+                int ret = createDataDirsLI(pkgName, pkg.applicationInfo.uid,
+                                           pkg.applicationInfo.seinfo);
                 if (ret < 0) {
                     // Error from installer
                     mLastScanError = PackageManager.INSTALL_FAILED_INSUFFICIENT_STORAGE;
