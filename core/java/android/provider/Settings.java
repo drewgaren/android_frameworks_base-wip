@@ -3335,8 +3335,14 @@ public final class Settings {
          * Volume key controls ringtone or media sound stream
          *
          * @hide
-*        public static final String VOLUME_KEYS_CONTROL_RING_STREAM = "volume_keys_control_ring_stream";
+         * public static final String VOLUME_KEYS_CONTROL_RING_STREAM = "volume_keys_control_ring_stream";
          */
+
+	/**
+         * Notifications Expand Behavior
+         * @hide
+         */
+        public static final String NOTIFICATIONS_BEHAVIOUR = "notifications_behaviour";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
