@@ -697,6 +697,7 @@ public class ViewConfiguration {
         }
 
         // Report menu key presence based on hardware key rebinding
+	IWindowManager wm = WindowManagerGlobal.getWindowManagerService();
         try {
             return wm.hasMenuKeyEnabled();
         } catch (RemoteException ex) {

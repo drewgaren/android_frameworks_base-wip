@@ -510,6 +510,14 @@ public class TimePicker extends FrameLayout {
         }
     }
 
+    private void updateMinuteControl() {
+        if (is24HourView()) {
+            mMinuteSpinnerInput.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        } else {
+            mMinuteSpinnerInput.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+        }
+    }	
+
     private void updateAmPmControl() {
         if (is24HourView()) {
             if (mAmPmSpinner != null) {
