@@ -2816,6 +2816,12 @@ public final class Settings {
          */
         public static final String HALO_HIDE = "halo_hide";
 
+	/**
+         * HALO enabled, should default to 0 (no, HALO is disabled)
+         * @hide
+         */
+        public static final String HALO_ENABLED = "halo_enabled";
+
         /**
          * Display style of the status bar battery information
          * 0: Display the stock battery information
