@@ -2822,6 +2822,12 @@ public final class Settings {
          */
         public static final String HALO_ENABLED = "halo_enabled";
 
+	/**
+         * Do you want popups/floating windows?
+         * @hide
+         */
+        public static final String WE_WANT_POPUPS = "we_want_popups";
+
         /**
          * Display style of the status bar battery information
          * 0: Display the stock battery information
