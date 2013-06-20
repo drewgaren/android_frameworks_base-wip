@@ -277,14 +277,14 @@ public class CircleBattery extends ImageView implements BatteryController.Batter
         canvas.drawArc(drawRect, 270 + animOffset, 3.6f * level, false, usePaint); 
         // if chosen by options, draw percentage text in the middle
         // always skip percentage when 100, so layout doesnt break
-        if (unknownStatus) {
-            mPaintFont.setColor(usePaint.getColor());
-            canvas.drawText("?", textX, mTextY, mPaintFont);
-        } else if (level < 100 && mPercentage) {
-            mPaintFont.setColor(usePaint.getColor());
+        if (level < 100 && mPercentage) {
+            if (level <= 14) {
+                mPaintFont.setColor(mPaintRed.getColor());
+            } else {
+                mPaintFont.setColor(mCircleTextColor);
+            }
             canvas.drawText(Integer.toString(level), textX, mTextY, mPaintFont);
-         } 
-
+	}
     }
 
     @Override
