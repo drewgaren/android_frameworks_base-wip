@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2011, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (c) 2011, The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 package com.android.server;
 
@@ -20,17 +20,20 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import android.app.ActivityManagerNative;
 import android.app.IProfileManager;
 import android.app.NotificationGroup;
 import android.app.Profile;
 import android.app.ProfileGroup;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.XmlResourceParser;
 import android.net.wifi.SupplicantState;
-import android.net.wifi.WifiManager; 
+import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.text.TextUtils;
@@ -50,11 +53,20 @@ public class ProfileManagerService extends IProfileManager.Stub {
     // Enable the below for detailed logging of this class
     private static final boolean LOCAL_LOGV = false;
     /**
-     * <p>Broadcast Action: A new profile has been selected. This can be triggered by the user
-     * or by calls to the ProfileManagerService / Profile.</p>
-     * @hide
-     */
+* <p>Broadcast Action: A new profile has been selected. This can be triggered by the user
+* or by calls to the ProfileManagerService / Profile.</p>
+* @hide
+*/
     public static final String INTENT_ACTION_PROFILE_SELECTED = "android.intent.action.PROFILE_SELECTED";
+
+    /**
+* <p>Broadcast Action: Current profile has been updated. This is triggered every time the
+* currently active profile is updated, instead of selected.</p>
+* <p> For instance, this includes profile updates caused by a locale change, which doesn't
+* trigger a profile selection, but causes its name to change.</p>
+* @hide
+*/
+    public static final String INTENT_ACTION_PROFILE_UPDATED = "android.intent.action.PROFILE_UPDATED";
 
     public static final String PERMISSION_CHANGE_SETTINGS = "android.permission.WRITE_SETTINGS";
 
@@ -79,26 +91,25 @@ public class ProfileManagerService extends IProfileManager.Stub {
     private boolean mDirty;
 
     private WifiManager mWifiManager;
-    private String mlastConnectedSSID; 
+    private String mLastConnectedSSID;
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-
             if (action.equals(Intent.ACTION_LOCALE_CHANGED)) {
                 persistIfDirty();
                 initialize();
             } else if (action.equals(Intent.ACTION_SHUTDOWN)) {
                 persistIfDirty();
-	    
-	    } else if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
+
+            } else if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
                 SupplicantState state = intent.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
                 int triggerState;
                 switch (state) {
                     case COMPLETED:
                         triggerState = Profile.TriggerState.ON_CONNECT;
-                        mlastConnectedSSID = getActiveSSID();
+                        mLastConnectedSSID = getActiveSSID();
                         break;
                     case DISCONNECTED:
                         triggerState = Profile.TriggerState.ON_DISCONNECT;
@@ -106,23 +117,36 @@ public class ProfileManagerService extends IProfileManager.Stub {
                     default:
                         return;
                 }
-                for (Profile p : mProfiles.values()) {
-                    if (triggerState ==  p.getWifiTrigger(mlastConnectedSSID)) {
-                        try {
-                            setActiveProfile(p, true);
-                        } catch (RemoteException e) {
-                            Log.e(TAG, "Could not update profile on wifi AP change", e);
-                        }
-                    }
-                } 
+                checkTriggers(Profile.TriggerType.WIFI, mLastConnectedSSID, triggerState);
+            } else if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)
+                    || action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+                int triggerState = action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)
+                        ? Profile.TriggerState.ON_CONNECT : Profile.TriggerState.ON_DISCONNECT;
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+                checkTriggers(Profile.TriggerType.BLUETOOTH, device.getAddress(), triggerState);
+            }
+        }
+
+        private void checkTriggers(int type, String id, int newState) {
+            for (Profile p : mProfiles.values()) {
+                if (newState != p.getTrigger(type, id)) {
+                    continue;
+                }
+
+                try {
+                    setActiveProfile(p, true);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "Could not update profile on trigger", e);
+                }
             }
         }
     };
 
     public ProfileManagerService(Context context) {
         mContext = context;
-	mWifiManager = (WifiManager)mContext.getSystemService(Context.WIFI_SERVICE);
-        mlastConnectedSSID = getActiveSSID(); 
+        mWifiManager = (WifiManager)mContext.getSystemService(Context.WIFI_SERVICE);
+        mLastConnectedSSID = getActiveSSID();
 
         mWildcardGroup = new NotificationGroup(
                 context.getString(com.android.internal.R.string.wildcardProfile),
@@ -134,7 +158,9 @@ public class ProfileManagerService extends IProfileManager.Stub {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_LOCALE_CHANGED);
         filter.addAction(Intent.ACTION_SHUTDOWN);
-	filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION); 
+        filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         mContext.registerReceiver(mIntentReceiver, filter);
     }
 
@@ -173,7 +199,7 @@ public class ProfileManagerService extends IProfileManager.Stub {
 
     private String getActiveSSID() {
         return mWifiManager.getConnectionInfo().getSSID().replace("\"", "");
-    } 
+    }
 
     @Override
     public void resetAll() {
@@ -218,12 +244,12 @@ public class ProfileManagerService extends IProfileManager.Stub {
 
     private boolean setActiveProfile(Profile newActiveProfile, boolean doinit) throws RemoteException {
         /*
-         * NOTE: Since this is not a public function, and all public functions
-         * take either a string or a UUID, the active profile should always be
-         * in the collection.  If writing another setActiveProfile which receives
-         * a Profile object, run enforceChangePermissions, add the profile to the
-         * list, and THEN add it.
-         */
+* NOTE: Since this is not a public function, and all public functions
+* take either a string or a UUID, the active profile should always be
+* in the collection. If writing another setActiveProfile which receives
+* a Profile object, run enforceChangePermissions, add the profile to the
+* list, and THEN add it.
+*/
 
         try {
             enforceChangePermissions();
@@ -235,10 +261,10 @@ public class ProfileManagerService extends IProfileManager.Stub {
                 if (LOCAL_LOGV) Log.v(TAG, "setActiveProfile(Profile, boolean) - Running init");
 
                 /*
-                 * We need to clear the caller's identity in order to
-                 * - allow the profile switch to execute actions not included in the caller's permissions
-                 * - broadcast INTENT_ACTION_PROFILE_SELECTED
-                 */
+* We need to clear the caller's identity in order to
+* - allow the profile switch to execute actions not included in the caller's permissions
+* - broadcast INTENT_ACTION_PROFILE_SELECTED
+*/
                 long token = clearCallingIdentity();
 
                 // Call profile's "doSelect"
@@ -254,6 +280,15 @@ public class ProfileManagerService extends IProfileManager.Stub {
 
                 restoreCallingIdentity(token);
                 persistIfDirty();
+            } else if (lastProfile != mActiveProfile &&
+                    ActivityManagerNative.isSystemReady()) {
+                // Something definitely changed: notify.
+                long token = clearCallingIdentity();
+                Intent broadcast = new Intent(INTENT_ACTION_PROFILE_UPDATED);
+                broadcast.putExtra("name", mActiveProfile.getName());
+                broadcast.putExtra("uuid", mActiveProfile.getUuid().toString());
+                mContext.sendBroadcastAsUser(broadcast, UserHandle.ALL);
+                restoreCallingIdentity(token);
             }
             return true;
         } catch (Exception ex) {
@@ -287,7 +322,7 @@ public class ProfileManagerService extends IProfileManager.Stub {
         }
 
         /* enforce a matchup between profile and notification group, which not only
-         * works by UUID, but also by name for backwards compatibility */
+* works by UUID, but also by name for backwards compatibility */
         for (ProfileGroup pg : profile.getProfileGroups()) {
             if (pg.matches(group, defaultGroup)) {
                 return;
@@ -366,7 +401,7 @@ public class ProfileManagerService extends IProfileManager.Stub {
             mProfileNames.put(profile.getName(), profile.getUuid());
             mProfiles.put(profile.getUuid(), profile);
             /* no need to set mDirty, if the profile was actually changed,
-             * it's marked as dirty by itself */
+* it's marked as dirty by itself */
             persistIfDirty();
 
             // Also update we changed the active profile
@@ -443,7 +478,7 @@ public class ProfileManagerService extends IProfileManager.Stub {
         if (old != null) {
             mGroups.put(group.getUuid(), group);
             /* no need to set mDirty, if the group was actually changed,
-             * it's marked as dirty by itself */
+* it's marked as dirty by itself */
             persistIfDirty();
         }
     }
