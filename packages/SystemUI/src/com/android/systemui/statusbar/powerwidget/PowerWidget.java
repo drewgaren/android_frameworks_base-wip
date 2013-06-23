@@ -91,6 +91,7 @@ public class PowerWidget extends FrameLayout {
 
     static {
         sPossibleButtons.put(PowerButton.BUTTON_WIFI, WifiButton.class);
+	sPossibleButtons.put(PowerButton.BUTTON_REBOOT, RebootButton.class);
         sPossibleButtons.put(PowerButton.BUTTON_FCHARGE, FChargeButton.class);
         sPossibleButtons.put(PowerButton.BUTTON_GPS, GPSButton.class);
         sPossibleButtons.put(PowerButton.BUTTON_BLUETOOTH, BluetoothButton.class);
@@ -459,6 +460,13 @@ public class PowerWidget extends FrameLayout {
         } else {
             setVisibility(View.VISIBLE);
         }
+    }
+
+    public boolean powerWidgetEnabled() {
+        // now check if we need to display the widget still
+        boolean displayPowerWidget = Settings.System.getInt(mContext.getContentResolver(),
+                   Settings.System.EXPANDED_VIEW_WIDGET, 0) == 1;
+        return displayPowerWidget;
     }
 
     private void updateScrollbar() {

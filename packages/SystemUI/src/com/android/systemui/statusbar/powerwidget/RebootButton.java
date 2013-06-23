@@ -18,7 +18,6 @@ package com.android.systemui.statusbar.powerwidget;
 
 import com.android.systemui.R;
 
-
 import android.content.Context;
 import android.os.PowerManager;
 
@@ -27,7 +26,7 @@ public class RebootButton extends PowerButton {
 
     private boolean rebootToRecovery = false; 
 
-    //public RebootButton() { mType = BUTTON_REBOOT; }
+    public RebootButton() { mType = BUTTON_REBOOT; }
 
     @Override
     protected void updateState(Context context) {

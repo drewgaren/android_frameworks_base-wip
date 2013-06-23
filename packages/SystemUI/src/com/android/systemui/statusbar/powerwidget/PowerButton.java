@@ -125,6 +125,12 @@ public abstract class PowerButton {
         return new ArrayList<Uri>();
     }
 
+    public void afterInit(){
+        /* this method is added for custom buttons where we need some inits after instantiation
+	like creating listeners or observes.
+	*/
+    }
+
     protected void setupButton(View view) {
         mView = view;
         if (mView != null) {
