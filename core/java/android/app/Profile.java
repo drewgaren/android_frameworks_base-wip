@@ -232,8 +232,7 @@ public final class Profile implements Parcelable, Comparable {
         readFromParcel(in);
     }
 
-     public int getWifiTrigger(String ssid) {
-        public int getTrigger(int type, String id) {
+    public int getTrigger(int type, String id) {
         ProfileTrigger trigger = id != null ? mTriggers.get(id) : null;
         if (trigger != null) {
             return trigger.mState; 
