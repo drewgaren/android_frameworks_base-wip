@@ -1,18 +1,18 @@
 /*
-* Copyright (C) 2011 The Android Open Source Project
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package android.app;
 
@@ -34,12 +34,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 /**
-* @hide
-*/
+ * @hide
+ */
 public final class Profile implements Parcelable, Comparable {
 
     private String mName;
@@ -68,7 +67,7 @@ public final class Profile implements Parcelable, Comparable {
 
     private Map<Integer, StreamSettings> streams = new HashMap<Integer, StreamSettings>();
 
-    private Map<String, ProfileTrigger> mTriggers = new HashMap<String, ProfileTrigger>();
+    private Map<String, Integer> mWifiTriggers = new HashMap<String, Integer>(); 
 
     private Map<Integer, ConnectionSettings> connections = new HashMap<Integer, ConnectionSettings>();
 
@@ -86,122 +85,11 @@ public final class Profile implements Parcelable, Comparable {
     }
 
     /** @hide */
-    public static class TriggerType {
-        public static final int WIFI = 0;
-        public static final int BLUETOOTH = 1;
-    }
-
-    /** @hide */
     public static class TriggerState {
         public static final int ON_CONNECT = 0;
         public static final int ON_DISCONNECT = 1;
         public static final int DISABLED = 2;
-    }
-
-    public static class ProfileTrigger implements Parcelable {
-        private int mType;
-        private String mId;
-        private String mName;
-        private int mState;
-
-        public ProfileTrigger(int type, String id, int state, String name) {
-            mType = type;
-            mId = id;
-            mState = state;
-            mName = name;
-        }
-
-        private ProfileTrigger(Parcel in) {
-            mType = in.readInt();
-            mId = in.readString();
-            mState = in.readInt();
-            mName = in.readString();
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeInt(mType);
-            dest.writeString(mId);
-            dest.writeInt(mState);
-            dest.writeString(mName);
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        public int getType() {
-            return mType;
-        }
-
-        public String getName() {
-            return mName;
-        }
-
-        public String getId() {
-            return mId;
-        }
-
-        public int getState() {
-            return mState;
-        }
-
-        public void getXmlString(StringBuilder builder, Context context) {
-            final String itemType = mType == TriggerType.WIFI ? "wifiAP" : "btDevice";
-
-            builder.append("<");
-            builder.append(itemType);
-            builder.append(" ");
-            builder.append(getIdType(mType));
-            builder.append("=\"");
-            builder.append(mId);
-            builder.append("\" state=\"");
-            builder.append(mState);
-            builder.append("\" name=\"");
-            builder.append(mName);
-            builder.append("\"></");
-            builder.append(itemType);
-            builder.append(">\n");
-        }
-
-        public static ProfileTrigger fromXml(XmlPullParser xpp, Context context) {
-            final String name = xpp.getName();
-            final int type;
-
-            if (name.equals("wifiAP")) {
-                type = TriggerType.WIFI;
-            } else if (name.equals("btDevice")) {
-                type = TriggerType.BLUETOOTH;
-            } else {
-                return null;
-            }
-
-            String id = xpp.getAttributeValue(null, getIdType(type));
-            int state = Integer.valueOf(xpp.getAttributeValue(null, "state"));
-            String triggerName = xpp.getAttributeValue(null, "name");
-            if (triggerName == null) {
-                triggerName = id;
-            }
-
-            return new ProfileTrigger(type, id, state, triggerName);
-        }
-
-        private static String getIdType(int type) {
-            return type == TriggerType.WIFI ? "ssid" : "address";
-        }
-
-        public static final Parcelable.Creator<ProfileTrigger> CREATOR = new Parcelable.Creator<ProfileTrigger>() {
-            public ProfileTrigger createFromParcel(Parcel in) {
-                return new ProfileTrigger(in);
-            }
-
-            @Override
-            public ProfileTrigger[] newArray(int size) {
-                return new ProfileTrigger[size];
-            }
-        };
-    }
+    } 
 
     /** @hide */
     public static final Parcelable.Creator<Profile> CREATOR = new Parcelable.Creator<Profile>() {
@@ -224,7 +112,7 @@ public final class Profile implements Parcelable, Comparable {
         mName = name;
         mNameResId = nameResId;
         mUuid = uuid;
-        mProfileType = TOGGLE_TYPE; //Default to toggle type
+        mProfileType = TOGGLE_TYPE;  //Default to toggle type
         mDirty = false;
     }
 
@@ -232,48 +120,26 @@ public final class Profile implements Parcelable, Comparable {
         readFromParcel(in);
     }
 
-    public int getTrigger(int type, String id) {
-        ProfileTrigger trigger = id != null ? mTriggers.get(id) : null;
-        if (trigger != null) {
-            return trigger.mState;
+     public int getWifiTrigger(String ssid) {
+        if (ssid != null && mWifiTriggers.containsKey(ssid)) {
+            return mWifiTriggers.get(ssid);
         }
         return TriggerState.DISABLED;
     }
 
-    public ArrayList<ProfileTrigger> getTriggersFromType(int type) {
-        ArrayList<ProfileTrigger> result = new ArrayList<ProfileTrigger>();
-        for (Entry<String, ProfileTrigger> profileTrigger: mTriggers.entrySet()) {
-            ProfileTrigger trigger = profileTrigger.getValue();
-            if (trigger.getType() == type) {
-                result.add(trigger);
-            }
-        }
-        return result;
-    }
-
-    public void setTrigger(int type, String id, int state, String name) {
-        if (id == null
-                || type < TriggerType.WIFI || type > TriggerType.BLUETOOTH
-                || state < TriggerState.ON_CONNECT || state > TriggerState.DISABLED) {
+    public void setWifiTrigger(String ssid, int value) {
+        if (ssid == null || value < TriggerState.ON_CONNECT || value > TriggerState.DISABLED) {
             return;
         }
-
-        ProfileTrigger trigger = mTriggers.get(id);
-
-        if (state == TriggerState.DISABLED) {
-            if (trigger != null) {
-                mTriggers.remove(id);
-            }
-        } else if (trigger != null) {
-            trigger.mState = state;
+        if (value == TriggerState.DISABLED && mWifiTriggers.containsKey(ssid)) {
+            mWifiTriggers.remove(ssid);
         } else {
-            mTriggers.put(id, new ProfileTrigger(type, id, state, name));
+            mWifiTriggers.put(ssid, value);
         }
-
         mDirty = true;
     }
 
-    public int compareTo(Object obj) {
+    public int compareTo(Object obj) { 
         Profile tmp = (Profile) obj;
         if (mName.compareTo(tmp.mName) < 0) {
             return -1;
@@ -346,7 +212,6 @@ public final class Profile implements Parcelable, Comparable {
         dest.writeParcelable(mRingMode, flags);
         dest.writeParcelable(mAirplaneMode, flags);
         dest.writeInt(mScreenLockMode);
-        dest.writeMap(mTriggers);
     }
 
     /** @hide */
@@ -379,7 +244,7 @@ public final class Profile implements Parcelable, Comparable {
         mRingMode = (RingModeSettings) in.readParcelable(null);
         mAirplaneMode = (AirplaneModeSettings) in.readParcelable(null);
         mScreenLockMode = in.readInt();
-        in.readMap(mTriggers, null);
+	in.readMap(mWifiTriggers, null); 
     }
 
     public String getName() {
@@ -564,13 +429,17 @@ public final class Profile implements Parcelable, Comparable {
         for (ConnectionSettings cs : connections.values()) {
             cs.getXmlString(builder, context);
         }
-        if (!mTriggers.isEmpty()) {
+	if (!mWifiTriggers.isEmpty()) {
             builder.append("<triggers>\n");
-            for (ProfileTrigger trigger : mTriggers.values()) {
-                trigger.getXmlString(builder, context);
+            for (Map.Entry<String,Integer> e : mWifiTriggers.entrySet()) {
+                builder.append("<wifiAP ssid=\"");
+                builder.append(e.getKey());
+                builder.append("\" state=\"");
+                builder.append(e.getValue());
+                builder.append("\"></wifiAP>\n");
             }
             builder.append("</triggers>\n");
-        }
+        } 
 
         builder.append("</profile>\n");
         mDirty = false;
@@ -599,19 +468,21 @@ public final class Profile implements Parcelable, Comparable {
         return uuids;
     }
 
-    private static void readTriggersFromXml(XmlPullParser xpp, Context context, Profile profile)
-            throws XmlPullParserException, IOException {
+    private static HashMap<String, Integer> readWifiTriggersFromXml(XmlPullParser xpp, Context context)
+            throws XmlPullParserException,
+            IOException {
         int event = xpp.next();
-        while (event != XmlPullParser.END_TAG || !xpp.getName().equals("triggers")) {
-            if (event == XmlPullParser.START_TAG) {
-                ProfileTrigger trigger = ProfileTrigger.fromXml(xpp, context);
-                if (trigger != null) {
-                    profile.mTriggers.put(trigger.mId, trigger);
-                }
+        HashMap<String, Integer> triggers = new HashMap<String, Integer>();
+        while (event != XmlPullParser.END_TAG || xpp.getName().equals("wifiAP")) {
+            if (event == XmlPullParser.START_TAG){
+                String ssid = xpp.getAttributeValue(null, "ssid");
+                String state = xpp.getAttributeValue(null, "state");
+                triggers.put(ssid, Integer.valueOf(state));
             }
             event = xpp.next();
         }
-    }
+        return triggers;
+    }  
 
     /** @hide */
     public static Profile fromXml(XmlPullParser xpp, Context context)
@@ -638,14 +509,14 @@ public final class Profile implements Parcelable, Comparable {
             Log.w(TAG,
                     "Null Pointer - UUID not found for "
                     + profileName
-                    + ". New UUID generated: "
+                    + ".  New UUID generated: "
                     + profileUuid.toString()
                     );
         } catch (IllegalArgumentException e) {
             Log.w(TAG,
                     "UUID not recognized for "
                     + profileName
-                    + ". New UUID generated: "
+                    + ".  New UUID generated: "
                     + profileUuid.toString()
                     );
         }
@@ -687,9 +558,9 @@ public final class Profile implements Parcelable, Comparable {
                     ConnectionSettings cs = ConnectionSettings.fromXml(xpp, context);
                     profile.connections.put(cs.getConnectionId(), cs);
                 }
-                if (name.equals("triggers")) {
-                    readTriggersFromXml(xpp, context, profile);
-                }
+		 if (name.equals("triggers")) {
+                    profile.mWifiTriggers = readWifiTriggersFromXml(xpp, context);
+                } 
             }
             event = xpp.next();
         }
