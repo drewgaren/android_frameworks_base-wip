@@ -95,13 +95,13 @@ import com.android.systemui.statusbar.CommandQueue;
 import com.android.systemui.statusbar.GestureRecorder;
 import com.android.systemui.statusbar.NotificationData;
 import com.android.systemui.statusbar.NotificationData.Entry;
-import com.android.systemui.statusbar.SignalClusterTextView; 
+import com.android.systemui.statusbar.SignalClusterTextView;
 import com.android.systemui.statusbar.SignalClusterView;
 import com.android.systemui.statusbar.StatusBarIconView;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.CircleBattery;
 import com.android.systemui.statusbar.policy.CircleDockBattery;
-import com.android.systemui.statusbar.policy.Clock; 
+import com.android.systemui.statusbar.policy.Clock;
 import com.android.systemui.statusbar.policy.DockBatteryController;
 import com.android.systemui.statusbar.policy.BluetoothController;
 import com.android.systemui.statusbar.policy.DateView;
@@ -222,7 +222,7 @@ public class PhoneStatusBar extends BaseStatusBar {
     QuickSettingsContainerView mSettingsContainer;
     int mSettingsPanelGravity;
     private TilesChangedObserver mTilesChangedObserver;
-    private SettingsObserver mSettingsObserver; 
+    private SettingsObserver mSettingsObserver;
 
     // top bar
     View mNotificationPanelHeader;
@@ -241,7 +241,7 @@ public class PhoneStatusBar extends BaseStatusBar {
     private SignalClusterTextView mSignalTextView;
     private CircleBattery mCircleBattery;
     private CircleDockBattery mCircleDockBattery;
-    private Clock mClock; 
+    private Clock mClock;
     
     private boolean mShowCarrierInPanel = false;
 
@@ -381,7 +381,7 @@ public class PhoneStatusBar extends BaseStatusBar {
             mBrightnessControl = brightnessValue != Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
                     && Settings.System.getIntForUser(resolver, Settings.System.STATUS_BAR_BRIGHTNESS_CONTROL,
                             0, UserHandle.USER_CURRENT) == 1;
-	    //updateVisibility(); 
+//updateVisibility();
         }
     }
 
@@ -437,7 +437,7 @@ if (mHaloButton != null && mHasFlipSettings) {
         if (ENABLE_INTRUDERS) addIntruderView();
 
         mSettingsObserver = new SettingsObserver(mHandler);
-        mSettingsObserver.observe(); 
+        mSettingsObserver.observe();
 
         // Lastly, call to the icon policy to install/update all the icons.
         mIconPolicy = new PhoneStatusBarPolicy(mContext);
@@ -630,7 +630,7 @@ mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
         mTicker = new MyTicker(context, mStatusBarView);
         TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
         tickerView.mTicker = mTicker;
-	if (mHaloActive) mTickerView.setVisibility(View.GONE);
+if (mHaloActive) mTickerView.setVisibility(View.GONE);
 
         mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
 
@@ -643,7 +643,7 @@ mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
         mBatteryController.addIconView((ImageView)mStatusBarView.findViewById(R.id.battery));
         mBatteryController.addLabelView((TextView)mStatusBarView.findViewById(R.id.battery_text));
 
-	mCircleBattery = (CircleBattery) mStatusBarView.findViewById(R.id.circle_battery);
+mCircleBattery = (CircleBattery) mStatusBarView.findViewById(R.id.circle_battery);
         mBatteryController.addStateChangedCallback(mCircleBattery);
 
         // Dock Battery support
@@ -657,10 +657,10 @@ mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
             mDockBatteryController.addLabelView(
                     (TextView)mStatusBarView.findViewById(R.id.dock_battery_text));
 
-	mCircleDockBattery = 
+mCircleDockBattery =
                     (CircleDockBattery) mStatusBarView.findViewById(R.id.circle_dock_battery);
             final DockBatteryController.DockBatteryStateChangeCallback callback =
-                    (DockBatteryController.DockBatteryStateChangeCallback) mCircleDockBattery; 
+                    (DockBatteryController.DockBatteryStateChangeCallback) mCircleDockBattery;
             mDockBatteryController.addStateChangedCallback(callback);
         } else {
             // Remove dock battery icons if device doesn't hava dock battery support
@@ -670,7 +670,7 @@ mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
             if (v != null) mStatusBarView.removeView(v);
             v = mStatusBarView.findViewById(R.id.circle_dock_battery);
             if (v != null) mStatusBarView.removeView(v);
-	    mCircleDockBattery = null; 
+mCircleDockBattery = null;
         }
 
         mNetworkController = new NetworkController(mContext);
@@ -678,10 +678,10 @@ mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
 
         mSignalView = (SignalClusterView) mStatusBarView.findViewById(R.id.signal_cluster);
         mSignalTextView = (SignalClusterTextView) mStatusBarView.findViewById(R.id.signal_cluster_text);
-	mClock = (Clock) mStatusBarView.findViewById(R.id.clock); 
+mClock = (Clock) mStatusBarView.findViewById(R.id.clock);
         
         mNetworkController.addSignalCluster(mSignalView);
-        mSignalView.setNetworkController(mNetworkController); 
+        mSignalView.setNetworkController(mNetworkController);
 
         mEmergencyCallLabel = (TextView)mStatusBarWindow.findViewById(R.id.emergency_calls_only);
         if (mEmergencyCallLabel != null) {
@@ -969,7 +969,8 @@ mIsAutoBrightNess = checkAutoBrightNess();
 
     private void prepareNavigationBarView() {
         mNavigationBarView.reorient();
-        mNavigationBarView.setListener(mRecentsClickListener,mRecentsPreloadOnTouchListener, mHomeSearchActionListener);
+        mNavigationBarView.setListeners(mRecentsClickListener,
+                mRecentsPreloadOnTouchListener, mHomeSearchActionListener); 
         updateSearchPanel();
     }
 
@@ -1380,8 +1381,8 @@ if (mHaloButton != null) {
     }
 
     public void showClock(boolean show) {
-	if (mClock != null) {
-	mClock.setHidden(!show); 
+if (mClock != null) {
+mClock.setHidden(!show);
            if (mStatusBarView == null) return;
            ContentResolver resolver = mContext.getContentResolver();
            View clock = mStatusBarView.findViewById(R.id.clock);
@@ -1396,12 +1397,12 @@ if (mHaloButton != null) {
            if (centerClock && cclock != null) {
                cclock.setVisibility(show ? (mShowClock ? View.VISIBLE : View.GONE) : View.GONE);
            }
-	}
+}
     }
 
     /**
-     * State is one or more of the DISABLE constants from StatusBarManager.
-     */
+* State is one or more of the DISABLE constants from StatusBarManager.
+*/
     @Override
     public void disable(int state) {
         final int old = mDisabled;
@@ -2839,10 +2840,14 @@ mStatusBarView.updateBackgroundAlpha();
         if (mCircleDockBattery != null) {
             mCircleDockBattery.updateSettings();
         }
-        //if (mClock != null) {
-        //    mClock.updateSettings();
-        //}
-        super.userSwitched(newUserId); 
+        if (mClock != null) {
+         mClock.updateSettings();
+        }
+	if (mNavigationBarView != null) {
+            mNavigationBarView.updateSettings();
+	    mNavigationBarView.updateSettingsNavAlpha();
+        } 
+        super.userSwitched(newUserId);
     }
 
     private void resetUserSetupObserver() {
@@ -3062,7 +3067,8 @@ mStatusBarView.updateBackgroundAlpha();
     @Override
     protected boolean shouldDisableNavbarGestures() {
         return !isDeviceProvisioned()
-                || mExpandedVisible || NavigationBarView.getEditMode()
+                || mExpandedVisible
+                || (mNavigationBarView != null && mNavigationBarView.isInEditMode()) 
                 || (mDisabled & StatusBarManager.DISABLE_SEARCH) != 0;
     }
 
