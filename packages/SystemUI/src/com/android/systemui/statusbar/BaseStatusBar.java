@@ -351,6 +351,12 @@ public abstract class BaseStatusBar extends SystemUI implements
                    ));
         }
 
+	if (PieManager.getInstance().isPresent()) {
+            mPieController = new PieController(mContext);
+            mPieController.attachStatusBar(this);
+            addNavigationBarCallback(mPieController);
+        } 
+
         mCurrentUserId = ActivityManager.getCurrentUser();
 
         IntentFilter filter = new IntentFilter();
@@ -363,17 +369,14 @@ public abstract class BaseStatusBar extends SystemUI implements
                     mCurrentUserId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, -1);
                     if (true) Slog.v(TAG, "userId " + mCurrentUserId + " is in the house");
                     userSwitched(mCurrentUserId);
+		    if (mPieController != null) {
+                        mPieController.userSwitched(mCurrentUserId);
+                    } 
                 }
             }
         }, filter);
 
-        if (PieManager.getInstance().isPresent()) {
-            mPieController = new PieController(mContext);
-            mPieController.attachStatusBar(this);
-            addNavigationBarCallback(mPieController);
-        }
-
-	// Listen for HALO state
+        // Listen for HALO state
         mContext.getContentResolver().registerContentObserver(
                 Settings.System.getUriFor(Settings.System.HALO_ACTIVE), false, new ContentObserver(new Handler()) {
             @Override
