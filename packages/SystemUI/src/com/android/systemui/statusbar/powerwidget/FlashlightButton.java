@@ -21,7 +21,8 @@ public class FlashlightButton extends PowerButton {
     public FlashlightButton() { mType = BUTTON_FLASHLIGHT; }
 
     @Override
-    if (mActive) { 
+    protected void updateState(Context context) { 
+        if (mActive) { 
             mIcon = R.drawable.stat_flashlight_on;
             mState = STATE_ENABLED;
         } else {
