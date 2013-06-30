@@ -2750,16 +2750,34 @@ public final class Settings {
          */
         public static final String NAV_BUTTONS = "nav_buttons";
 
+	/**
+         * Option to show or not navigation bar
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_SHOW = "navigation_bar_show"; 
+
         /**
          * Height of navigation bar
          * @hide
          */
         public static final String NAVIGATION_BAR_HEIGHT = "navigation_bar_height";
 
+	/**
+	 * Landscape height of navigation bar
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_HEIGHT_LANDSCAPE = "navigation_bar_height_landscape";
+
         /**
-        * Notification Power Widget - Custom Brightness Mode
-        * @hide
-        */
+         * Width of navigation bar
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_WIDTH = "navigation_bar_width"; 
+
+        /**
+         * Notification Power Widget - Custom Brightness Mode
+         * @hide
+         */
         public static final String EXPANDED_BRIGHTNESS_MODE = "expanded_brightness_mode";
 
         /**

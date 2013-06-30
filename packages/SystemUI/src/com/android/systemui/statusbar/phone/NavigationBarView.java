@@ -243,6 +243,19 @@ public class NavigationBarView extends LinearLayout implements BaseStatusBar.Nav
         updateKeyguardAlpha();
     }
 
+    private LayoutParams getLayoutParams(boolean landscape, float dp) {
+        float px = dp * getResources().getDisplayMetrics().density;
+        return landscape ?
+                new LayoutParams(LayoutParams.MATCH_PARENT, (int) px, 1f) :
+                new LayoutParams((int) px, LayoutParams.MATCH_PARENT, 1f);
+    }
+
+    private LayoutParams getSeparatorLayoutParams(boolean landscape) {
+        float px = 25 * getResources().getDisplayMetrics().density;
+        return landscape ?
+                new LayoutParams(LayoutParams.MATCH_PARENT, (int) px) :
+                new LayoutParams((int) px, LayoutParams.MATCH_PARENT);
+    } 
 
     protected void updateResources() {
         final Resources res = mContext.getResources();
@@ -372,7 +385,7 @@ public class NavigationBarView extends LinearLayout implements BaseStatusBar.Nav
         final boolean disableBack = ((disabledFlags & View.STATUS_BAR_DISABLE_BACK) != 0)
                 && ((mNavigationIconHints & StatusBarManager.NAVIGATION_HINT_BACK_ALT) == 0);
         final boolean disableSearch = ((disabledFlags & View.STATUS_BAR_DISABLE_SEARCH) != 0);
-final boolean keygaurdProbablyEnabled = isKeyguardEnabled();
+	final boolean keygaurdProbablyEnabled = isKeyguardEnabled();
 
         if (SLIPPERY_WHEN_DISABLED) {
             setSlippery(disableHome && disableRecent && disableBack && disableSearch);
@@ -396,7 +409,7 @@ final boolean keygaurdProbablyEnabled = isKeyguardEnabled();
         setButtonWithTagVisibility(NavigationButtons.MENU_BIG, disableRecent ? View.INVISIBLE : View.VISIBLE);
         setButtonWithTagVisibility(NavigationButtons.SEARCH, disableRecent ? View.INVISIBLE : View.VISIBLE);
         getSearchLight().setVisibility((disableHome && !disableSearch) ? View.VISIBLE : View.GONE);
-getSearchLight().setVisibility(keygaurdProbablyEnabled ? View.VISIBLE : View.GONE);
+	getSearchLight().setVisibility(keygaurdProbablyEnabled ? View.VISIBLE : View.GONE);
         updateKeyguardAlpha();
     }
 
