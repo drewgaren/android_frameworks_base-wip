@@ -293,7 +293,7 @@ public abstract class Ticker {
 
                 scheduleAdvance();
                 break;
-            }
+            }S
             if (mSegments.size() == 0) {
                 tickerDone();
             }
