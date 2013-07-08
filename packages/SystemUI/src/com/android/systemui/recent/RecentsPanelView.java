@@ -91,6 +91,8 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
     private boolean mHighEndGfx;
     private ImageView mClearRecents;
 
+    private RecentsActivity mRecentsActivity;
+
     public static interface RecentsScrollView {
         public int numItemsInOneScreenful();
         public void setAdapter(TaskDescriptionAdapter adapter);
@@ -683,8 +685,7 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
                         holder.thumbnailViewImage, bm, 0, 0, null).toBundle();
 
         show(false);
-        if (ad.taskId >= 0) {
-	Intent intent = ad.intent;
+        Intent intent = ad.intent;
         boolean floating = (intent.getFlags() & Intent.FLAG_FLOATING_WINDOW) == Intent.FLAG_FLOATING_WINDOW;
         if (ad.taskId >= 0 && !floating) { 
             // This is an active task; it should just go to the foreground.

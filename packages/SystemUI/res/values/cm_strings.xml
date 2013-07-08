@@ -105,4 +105,6 @@
     <string name="pie_phone_status_airplane_mode">Airplane mode on</string>
     <string name="pie_phone_status_emergency_only">Emergency calls only</string>
 
+    <!-- Title shown in recents popup for showing app in floating mode --> 
+    <string name="status_bar_recent_floating_item_title">Floating mode</string>
 </resources>
