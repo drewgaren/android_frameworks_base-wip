@@ -1948,6 +1948,12 @@ public final class Settings {
         public static final String NOTIFICATIONS_USE_RING_VOLUME =
             "notifications_use_ring_volume";
 
+	/**
+         * Whether the blacklisting feature for phone calls is enabled
+         * @hide
+         */
+        public static final String PHONE_BLACKLIST_ENABLED = "phone_blacklist_enabled"; 
+
         /**
          * Whether the phone ringtone should be played in an increasing manner
          * @hide
