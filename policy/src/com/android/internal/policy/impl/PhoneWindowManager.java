@@ -309,7 +309,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mHasSystemNavBar;
     int mStatusBarHeight;
     WindowState mNavigationBar = null;
-    private boolean mNavBarFirstBootFlag = true; 
     boolean mHasNavigationBar = false;
     boolean mCanHideNavigationBar = false;
     boolean mNavigationBarCanMove = false; // can the navigation bar ever move to the side?
@@ -1287,23 +1286,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             mNavigationBarCanMove = false;
         }
 
-        if (mHasSystemNavBar) {
-            final int showByDefault = mContext.getResources().getBoolean(
-                    com.android.internal.R.bool.config_showNavigationBar) ? 1 : 0;
-            mHasNavigationBar = Settings.System.getInt(mContext.getContentResolver(),
-                    Settings.System.NAVIGATION_BAR_SHOW, showByDefault) == 1;
-
-            /*
-             * at first boot up, we need to make sure navbar gets created
-             * (or obey framework setting).
-             * this should quickly get over-ridden by the settings observer
-             * if it was disabled by the user.
-            */
-            if (mNavBarFirstBootFlag) {
-                mHasNavigationBar = (showByDefault == 1);
-                mNavBarFirstBootFlag = false;
-            }
-        } else { 
+        if (!mHasSystemNavBar) { 
             // Allow a system property to override this. Used by the emulator.
             // See also hasNavigationBar().
 	    String navBarOverride = SystemProperties.get("qemu.hw.mainkeys"); 
@@ -1462,17 +1445,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
 	    final int showByDefault = mContext.getResources().getBoolean(
                     com.android.internal.R.bool.config_showNavigationBar) ? 1 : 0;
-            boolean showNavBarNow = Settings.System.getInt(resolver,
+            mHasNavigationBar = Settings.System.getInt(resolver,
                     Settings.System.NAVIGATION_BAR_SHOW, showByDefault) == 1;
-            if (mHasNavigationBar != showNavBarNow) {
-                mHasNavigationBar = showNavBarNow;
-                if(mDisplay != null)
-                    setInitialDisplaySize(mDisplay, mUnrestrictedScreenWidth, mUnrestrictedScreenHeight, density);
-            }
 
-      if ((mExpandedState == 1 &&
+            if ((mExpandedState == 1 &&
                 (mExpandedStyle == 1 || mExpandedStyle == 3))
-                || !mHasNavigationBar) {
+                || !mHasNavigationBar) { 
                 // Set the navigation bar's dimensions to 0 in expanded desktop mode
                 mNavigationBarWidthForRotation[mPortraitRotation]
                         = mNavigationBarWidthForRotation[mUpsideDownRotation]
@@ -1574,6 +1552,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         if (updateRotation) {
             updateRotation(true);
+        }
+	if(mDisplay != null) {
+            setInitialDisplaySize(mDisplay, mUnrestrictedScreenWidth, mUnrestrictedScreenHeight, density);
         }
     }
 
@@ -1911,12 +1892,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     public int getNonDecorDisplayWidth(int fullWidth, int fullHeight, int rotation) {
-        if (mHasNavigationBar && !expandedDesktopHidesNavigationBar()) {
-            // For a basic navigation bar, when we are in landscape mode we place
-            // the navigation bar to the side.
-            if (mNavigationBarCanMove && fullWidth > fullHeight) {
-                return fullWidth - mNavigationBarWidthForRotation[rotation];
-            }
+        // For a basic navigation bar, when we are in landscape mode we place
+        // the navigation bar to the side.
+        if (mNavigationBarCanMove && fullWidth > fullHeight) {
+            return fullWidth - mNavigationBarWidthForRotation[rotation]; 
         }
         return fullWidth;
     }
@@ -3263,8 +3242,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         final Rect cf = mTmpContentFrame;
         final Rect vf = mTmpVisibleFrame;
 
-        final boolean hasNavBar = (isDefaultDisplay && mHasNavigationBar
-                && mNavigationBar != null && mNavigationBar.isVisibleLw());
+        final boolean hasNavBar = (isDefaultDisplay && mNavigationBar != null
+                && mNavigationBar.isVisibleLw()); 
 
         final int adjust = sim & SOFT_INPUT_MASK_ADJUST;
 
@@ -5385,8 +5364,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         return diff;
     }
 
-    // Use this instead of checking config_showNavigationBar so that it can be consistently
-    // overridden by qemu.hw.mainkeys in the emulator.
+    // Used for menu button behaviour etc which we let stay for hardware key
+    // devices like it should without navbar. See for more details
+    // PhoneWindowManager.java @Line 1115 
     public boolean hasNavigationBar() {
         return mHasNavigationBar;
     }
