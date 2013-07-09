@@ -1315,6 +1315,7 @@ mHandler.sendEmptyMessageDelayed(MSG_HIDE_INTRUDER, INTRUDER_ALERT_DECAY_MS);
         }
     }
 
+
     boolean hasClearableNotifications() {
         return mNotificationData.hasClearableItems();
     }
