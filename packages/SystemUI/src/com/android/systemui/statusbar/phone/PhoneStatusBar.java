@@ -1320,6 +1320,10 @@ mHandler.sendEmptyMessageDelayed(MSG_HIDE_INTRUDER, INTRUDER_ALERT_DECAY_MS);
         return mNotificationData.hasClearableItems();
     }
 
+    boolean hasVisibleNotifications() {
+        return mNotificationData.hasVisibleItems();
+    }
+
     @Override
     protected void setAreThereNotifications() {
         final boolean any = mNotificationData.size() > 0;
@@ -1389,8 +1393,8 @@ mHandler.sendEmptyMessageDelayed(MSG_HIDE_INTRUDER, INTRUDER_ALERT_DECAY_MS);
     }
 
     public void showClock(boolean show) {
-if (mClock != null) {
-mClock.setHidden(!show);
+	if (mClock != null) {
+	   mClock.setHidden(!show);
            if (mStatusBarView == null) return;
            ContentResolver resolver = mContext.getContentResolver();
            View clock = mStatusBarView.findViewById(R.id.clock);
@@ -1409,8 +1413,8 @@ mClock.setHidden(!show);
     }
 
     /**
-* State is one or more of the DISABLE constants from StatusBarManager.
-*/
+     * State is one or more of the DISABLE constants from StatusBarManager.
+     */
     @Override
     public void disable(int state) {
         final int old = mDisabled;
@@ -1522,7 +1526,7 @@ mClock.setHidden(!show);
                 haltTicker();
             }
         }
-mStatusBarView.updateBackgroundAlpha();
+	mStatusBarView.updateBackgroundAlpha();
     }
 
     @Override
@@ -1531,8 +1535,8 @@ mStatusBarView.updateBackgroundAlpha();
     }
 
     /**
-* All changes to the status bar and notifications funnel through here and are batched.
-*/
+     * All changes to the status bar and notifications funnel through here and are batched.
+     */
     private class H extends BaseStatusBar.H {
         @Override
         public void handleMessage(Message m) {
