@@ -79,7 +79,8 @@ public class KeyguardTransportControlView extends FrameLayout implements OnClick
     private IRemoteControlDisplayWeak mIRCD;
     private boolean mMusicClientPresent = true;
     private boolean mShouldBeShown = true;
-    
+    private boolean mAttachNotified = false;
+
     /**
      * The metadata which should be populated into the view once we've been attached
      */
@@ -216,13 +217,13 @@ public class KeyguardTransportControlView extends FrameLayout implements OnClick
     protected void onListenerDetached() {
         mMusicClientPresent = false;
         if (DEBUG) Log.v(TAG, "onListenerDetached()");
-        callAppropriateCallback();  
+        callCallbackIfNeeded(); 
     }
 
     private void onListenerAttached() {
         mMusicClientPresent = true;
         if (DEBUG) Log.v(TAG, "onListenerAttached()");
-        callAppropriateCallback(); 
+        callCallbackIfNeeded();
     }
 
     private void updateSettings() {
@@ -231,7 +232,7 @@ public class KeyguardTransportControlView extends FrameLayout implements OnClick
                 Settings.System.LOCKSCREEN_MUSIC_CONTROLS, 1, UserHandle.USER_CURRENT) != 0;
         if (DEBUG) Log.v(TAG, "updateSettings(): mShouldBeShown=" + mShouldBeShown);
         if (oldShown != mShouldBeShown) {
-            callAppropriateCallback(); 
+            callCallbackIfNeeded();
             if (mShouldBeShown && mMusicClientPresent
                     && mCurrentPlayState != RemoteControlClient.PLAYSTATE_NONE) {
                 // send out the play state change event that we suppressed earlier
@@ -240,19 +241,24 @@ public class KeyguardTransportControlView extends FrameLayout implements OnClick
         }
     }
 
-    private void callAppropriateCallback() { 
+    private void callCallbackIfNeeded() {
         if (mTransportCallback == null) {
-            Log.w(TAG, "callAppropriateCallback: no callback");
+            Log.w(TAG, "callCallbackIfNeeded: no callback");
             return;
         }
 
         boolean shouldBeAttached = mMusicClientPresent && mShouldBeShown;
-        if (DEBUG) Log.v(TAG, "callAppropriateCallback(): shouldBeAttached=" + shouldBeAttached); 
+        if (DEBUG) {
+            Log.v(TAG, "callCallbackIfNeeded(): shouldBeAttached=" + shouldBeAttached +
+                    ", mAttachNotified=" + mAttachNotified);
+        }
 
-        if (shouldBeAttached) {  
+        if (shouldBeAttached && !mAttachNotified) { 
             mTransportCallback.onListenerAttached();
-        } else { 
+        mAttachNotified = true;
+        } else if (!shouldBeAttached && mAttachNotified) {
             mTransportCallback.onListenerDetached();
+            mAttachNotified = false; 
         }
     }
 
@@ -377,8 +383,11 @@ public class KeyguardTransportControlView extends FrameLayout implements OnClick
     }
 
     public boolean isMusicPlaying() {
-       return mCurrentPlayState == RemoteControlClient.PLAYSTATE_PLAYING
-               || mCurrentPlayState == RemoteControlClient.PLAYSTATE_BUFFERING;
+       if (!mMusicClientPresent) {
+            return false;
+        }
+        return mCurrentPlayState == RemoteControlClient.PLAYSTATE_PLAYING
+                || mCurrentPlayState == RemoteControlClient.PLAYSTATE_BUFFERING; 
     }
 
     private static void setVisibilityBasedOnFlag(View view, int flags, int flag) {
