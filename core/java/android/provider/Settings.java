@@ -3020,6 +3020,14 @@ public final class Settings {
          */
         public static final String HIDE_STATUSBAR = "hide_statusbar"; 
 
+	/**
+         * Peek at stausbar when it is hidden by swiping down from top
+         * end of the screen
+         *
+         * @hide
+         */
+        public static final String STATUSBAR_PEEK = "statusbar_peek";  
+
        /**
         * Whether fcharge is enabled or not if kernel supports it
         * @hide
