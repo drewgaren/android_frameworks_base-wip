@@ -3026,7 +3026,13 @@ public final class Settings {
          *
          * @hide
          */
-        public static final String STATUSBAR_PEEK = "statusbar_peek";  
+        public static final String STATUSBAR_PEEK = "statusbar_peek"; 
+
+	/**
+         * Network speed indicator
+         * @hide
+         */
+        public static final String STATUS_BAR_TRAFFIC = "status_bar_traffic"; 
 
        /**
         * Whether fcharge is enabled or not if kernel supports it
