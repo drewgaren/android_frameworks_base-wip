@@ -89,7 +89,7 @@
     <integer name="quick_settings_user_time_settings_tile_span">1</integer>
 
     <!-- Whether rotation lock shows up in quick settings or not -->
-    <bool name="quick_settings_show_rotation_lock">false</bool>
+    <bool name="quick_settings_show_rotation_lock">true</bool>
 
     <!-- Timeouts for brightness dialog to disappear -->
     <integer name="quick_settings_brightness_dialog_short_timeout">2000</integer>
@@ -104,6 +104,9 @@
     <bool name="config_hasFlipSettingsPanel">true</bool>
 
     <!-- default Navigation Bar transparency. 0-255 -->
-    <integer name="navigation_bar_transparency">204</integer> 
+    <integer name="navigation_bar_transparency">204</integer>
+
+    <!-- configurable width dimension for the app sidebar trigger area -->
+    <dimen name="config_app_sidebar_trigger_width">8dip</dimen> 
 </resources>
 
