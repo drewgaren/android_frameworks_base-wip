@@ -2406,9 +2406,6 @@ public class Activity extends ContextThemeWrapper
         return onKeyShortcut(event.getKeyCode(), event);
     }
 
-    boolean mightBeMyGesture = false;
-    float tStatus;
-
     /**
      * Called to process touch screen events.  You can override this to
      * intercept all touch screen events before they are dispatched to the
@@ -2423,14 +2420,11 @@ public class Activity extends ContextThemeWrapper
 	final int action = ev.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-		tStatus = ev.getY();
 		if (Settings.System.getInt(getContentResolver(),
                     Settings.System.STATUSBAR_PEEK, 0) == 1) {
-                    if (tStatus < getStatusBarHeight()) {
+                    if (ev.getY() < getStatusBarHeight()) {
 			mQuickPeekInitialY = ev.getY();
                         mQuickPeekAction = true;
-                        mightBeMyGesture = true;
-                        return true;
 		    }	
                 }
 		onUserInteraction();
@@ -2443,33 +2437,27 @@ public class Activity extends ContextThemeWrapper
                 if (Math.abs(ev.getY() - mQuickPeekInitialY) > getStatusBarHeight()) {
                         mQuickPeekAction = false;
                 }
-                if (mightBeMyGesture) {
-                    if(ev.getY() > tStatus) {
-                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                        mHandler.postDelayed(new Runnable() {
-                            public void run() {
-                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-                                getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);     
-                            }
+		if (mQuickPeekAction) {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                    mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                        }
 
-                        }, 10000);
-                    }
-                    
-                    mightBeMyGesture = false;    
+                    }, 10000);
+
+                    mQuickPeekAction = false;    
                     return true;
                 }
+		
                 break;
 
             default:
 		mQuickPeekAction = false;
-                mightBeMyGesture = false;
+                //mightBeMyGesture = false;
                 break;
         } 
 
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            onUserInteraction();
-        }
         if (getWindow().superDispatchTouchEvent(ev)) {
             return true;
         }
