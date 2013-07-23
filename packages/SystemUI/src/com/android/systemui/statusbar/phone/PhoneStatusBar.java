@@ -38,7 +38,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.content.res.CustomTheme;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -71,7 +70,6 @@ import android.util.Log;
 import android.util.Pair;
 import android.util.Slog;
 import android.view.Display;
-import android.view.DisplayInfo;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
@@ -97,7 +95,6 @@ import com.android.internal.statusbar.StatusBarIcon;
 import com.android.internal.statusbar.StatusBarNotification;
 import com.android.internal.util.pie.PiePosition;
 import com.android.systemui.R;
-import com.android.systemui.statusbar.AppSidebar;
 import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.CommandQueue;
 import com.android.systemui.statusbar.GestureRecorder;
@@ -175,13 +172,6 @@ public class PhoneStatusBar extends BaseStatusBar {
 
 
     PhoneStatusBarPolicy mIconPolicy;
-
-    private AppSidebar mAppSidebar;
-    private int mSidebarPosition;
-
-    private boolean mUseCenterClock = false;
-
-    private static Boolean mIsDevicePhone = null;
 
     // These are no longer handled by the policy, because we need custom strategies for them
     BluetoothController mBluetoothController;
@@ -343,23 +333,6 @@ public class PhoneStatusBar extends BaseStatusBar {
         ? new GestureRecorder("/sdcard/statusbar_gestures.dat")
         : null;
 
-    protected static boolean isDevicePhone(Context con) {
-        if (mIsDevicePhone == null) {
-            WindowManager wm = (WindowManager)con.getSystemService(Context.WINDOW_SERVICE);
-            DisplayInfo outDisplayInfo = new DisplayInfo();
-            wm.getDefaultDisplay().getDisplayInfo(outDisplayInfo);
-            int shortSize = Math.min(outDisplayInfo.logicalHeight, outDisplayInfo.logicalWidth);
-            int shortSizeDp = shortSize * DisplayMetrics.DENSITY_DEFAULT / outDisplayInfo.logicalDensityDpi;
-            if (shortSizeDp < 600) {
-                // 0-599dp: "phone" UI with a separate status & navigation bar
-                mIsDevicePhone = true;
-            } else {
-                mIsDevicePhone = false;
-            }
-        }
-        return mIsDevicePhone;
-    }
-
     // brightness slider
     private int mIsBrightNessMode = 0;
     private int mIsStatusBarBrightNess;
@@ -400,8 +373,6 @@ public class PhoneStatusBar extends BaseStatusBar {
                     Settings.System.SCREEN_BRIGHTNESS_MODE), false, this, mCurrentUserId);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.AUTO_HIDE_STATUSBAR), false, this, UserHandle.USER_ALL);
-	    resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.APP_SIDEBAR_POSITION), false, this, UserHandle.USER_ALL);
             update();
         }
 
@@ -417,12 +388,6 @@ public class PhoneStatusBar extends BaseStatusBar {
             mBrightnessControl = brightnessValue != Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
                     && Settings.System.getIntForUser(resolver, Settings.System.STATUS_BAR_BRIGHTNESS_CONTROL,
                             0, UserHandle.USER_CURRENT) == 1;
-	    int sidebarPosition = Settings.System.getInt(
-                    resolver, Settings.System.APP_SIDEBAR_POSITION, AppSidebar.SIDEBAR_POSITION_LEFT);
-            if (sidebarPosition != mSidebarPosition) {
-                mSidebarPosition = sidebarPosition;
-                mWindowManager.updateViewLayout(mAppSidebar, getAppSidebarLayoutParams(sidebarPosition));
-            }
 
 	    if (mNotificationData != null) {
                 updateStatusBarVisibility();
@@ -448,7 +413,7 @@ public class PhoneStatusBar extends BaseStatusBar {
             if (mSettingsButton != null && mHasFlipSettings) {
                 mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
             }
-	    if (mHaloButton != null && mHasFlipSettings) {
+if (mHaloButton != null && mHasFlipSettings) {
                 mHaloButtonVisible = userSetup;
                 updateHaloButton();
             }
@@ -561,9 +526,6 @@ public class PhoneStatusBar extends BaseStatusBar {
             mNavigationBarView.setBar(this); 
         }
 
-	mAppSidebar = (AppSidebar)View.inflate(context, R.layout.app_sidebar, null);
-        mWindowManager.addView(mAppSidebar, getAppSidebarLayoutParams(mSidebarPosition));
-
         // figure out which pixel-format to use for the status bar.
         mPixelFormat = PixelFormat.OPAQUE;
 
@@ -577,7 +539,7 @@ public class PhoneStatusBar extends BaseStatusBar {
         mTickerView = mStatusBarView.findViewById(R.id.ticker);
 
         /* Destroy the old widget before recreating the expanded dialog
-           to make sure there are no context issues */
+to make sure there are no context issues */
         if (mRecreating)
             mPowerWidget.destroyWidget();
 
@@ -627,7 +589,7 @@ public class PhoneStatusBar extends BaseStatusBar {
             }
         }
 
-	mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
+mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
         if (mHaloButton != null) {
             mHaloButton.setOnClickListener(mHaloButtonListener);
             mHaloButtonVisible = true;
@@ -672,7 +634,7 @@ public class PhoneStatusBar extends BaseStatusBar {
         mTicker = new MyTicker(context, mStatusBarView);
         TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
         tickerView.mTicker = mTicker;
-	if (mHaloActive) mTickerView.setVisibility(View.GONE);
+if (mHaloActive) mTickerView.setVisibility(View.GONE);
 
         mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
 
@@ -685,7 +647,7 @@ public class PhoneStatusBar extends BaseStatusBar {
         mBatteryController.addIconView((ImageView)mStatusBarView.findViewById(R.id.battery));
         mBatteryController.addLabelView((TextView)mStatusBarView.findViewById(R.id.battery_text));
 
-	mCircleBattery = (CircleBattery) mStatusBarView.findViewById(R.id.circle_battery);
+mCircleBattery = (CircleBattery) mStatusBarView.findViewById(R.id.circle_battery);
         mBatteryController.addStateChangedCallback(mCircleBattery);
 
         // Dock Battery support
@@ -699,7 +661,7 @@ public class PhoneStatusBar extends BaseStatusBar {
             mDockBatteryController.addLabelView(
                     (TextView)mStatusBarView.findViewById(R.id.dock_battery_text));
 
-	    mCircleDockBattery =
+mCircleDockBattery =
                     (CircleDockBattery) mStatusBarView.findViewById(R.id.circle_dock_battery);
             final DockBatteryController.DockBatteryStateChangeCallback callback =
                     (DockBatteryController.DockBatteryStateChangeCallback) mCircleDockBattery;
@@ -712,7 +674,7 @@ public class PhoneStatusBar extends BaseStatusBar {
             if (v != null) mStatusBarView.removeView(v);
             v = mStatusBarView.findViewById(R.id.circle_dock_battery);
             if (v != null) mStatusBarView.removeView(v);
-		mCircleDockBattery = null;
+mCircleDockBattery = null;
         }
 
         mNetworkController = new NetworkController(mContext);
@@ -720,7 +682,7 @@ public class PhoneStatusBar extends BaseStatusBar {
 
         mSignalView = (SignalClusterView) mStatusBarView.findViewById(R.id.signal_cluster);
         mSignalTextView = (SignalClusterTextView) mStatusBarView.findViewById(R.id.signal_cluster_text);
-	mClock = (Clock) mStatusBarView.findViewById(R.id.clock);
+mClock = (Clock) mStatusBarView.findViewById(R.id.clock);
         
         mNetworkController.addSignalCluster(mSignalView);
         mSignalView.setNetworkController(mNetworkController);
@@ -824,11 +786,11 @@ public class PhoneStatusBar extends BaseStatusBar {
             mClingShown = true;
         }
 
-	// final ImageView wimaxRSSI =
-	// (ImageView)sb.findViewById(R.id.wimax_signal);
-	// if (wimaxRSSI != null) {
-	// mNetworkController.addWimaxIconView(wimaxRSSI);
-	// }
+// final ImageView wimaxRSSI =
+// (ImageView)sb.findViewById(R.id.wimax_signal);
+// if (wimaxRSSI != null) {
+// mNetworkController.addWimaxIconView(wimaxRSSI);
+// }
 
         // receive broadcasts
         IntentFilter filter = new IntentFilter();
@@ -846,7 +808,7 @@ public class PhoneStatusBar extends BaseStatusBar {
 
         mVelocityTracker = VelocityTracker.obtain();
 
-	mIsAutoBrightNess = checkAutoBrightNess();
+mIsAutoBrightNess = checkAutoBrightNess();
 
         updatePropFactorValue();
 
@@ -1099,25 +1061,6 @@ public class PhoneStatusBar extends BaseStatusBar {
         lp.windowAnimations = R.style.Animation_StatusBar_IntruderAlert;
 
         mWindowManager.addView(mIntruderAlertView, lp);
-    }
-
-    private WindowManager.LayoutParams getAppSidebarLayoutParams(int position) {
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_STATUS_BAR_SUB_PANEL,
-                0
-                | WindowManager.LayoutParams.FLAG_TOUCHABLE_WHEN_WAKING
-                | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-                | WindowManager.LayoutParams.FLAG_SPLIT_TOUCH,
-                PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.BOTTOM;// | Gravity.FILL_VERTICAL;
-        lp.gravity |= position == AppSidebar.SIDEBAR_POSITION_LEFT ? Gravity.LEFT : Gravity.RIGHT;
-        lp.setTitle("AppSidebar");
-
-        return lp;
     }
 
     @Override
@@ -2891,30 +2834,10 @@ mStatusBarView.updateBackgroundAlpha();
                 if (DEBUG) {
                     Slog.v(TAG, "configuration changed: " + mContext.getResources().getConfiguration());
                 }
-		//HERE//
-                Configuration config = mContext.getResources().getConfiguration();
                 mDisplay.getSize(mCurrentDisplaySize);
                 updateResources();
                 repositionNavigationBar();
                 updateExpandedViewPos(EXPANDED_LEAVE_ALONE);
-
-		try {
-                    // position app sidebar on left if in landscape orientation and device has a navbar
-                    if (mWindowManagerService.hasNavigationBar() &&
-                            isDevicePhone(mContext) &&
-                            config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        mWindowManager.updateViewLayout(mAppSidebar,
-                                getAppSidebarLayoutParams(AppSidebar.SIDEBAR_POSITION_LEFT));
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mAppSidebar.setPosition(AppSidebar.SIDEBAR_POSITION_LEFT);
-                            }
-                        }, 500);
-                    }
-                } catch (RemoteException e) {
-                }
-
                 updateShowSearchHoldoff();
             }
             else if (Intent.ACTION_SCREEN_ON.equals(action)) {
