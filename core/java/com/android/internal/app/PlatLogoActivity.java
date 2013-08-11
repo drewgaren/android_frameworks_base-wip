@@ -64,7 +64,7 @@ public class PlatLogoActivity extends Activity {
         lp.gravity = Gravity.CENTER_HORIZONTAL;
         lp.bottomMargin = (int) (-4*metrics.density);
 
-        String cmVersion = SystemProperties.get("ro.cm.version");
+        String cmVersion = SystemProperties.get("ro.orca.version");
         if (cmVersion != null) {
             cmVersion = cmVersion.replaceAll("([0-9\\.]+?)-.*", "$1");
         }
@@ -74,7 +74,7 @@ public class PlatLogoActivity extends Activity {
         tv.setTextSize(1.25f*size);
         tv.setTextColor(0xFFFFFFFF);
         tv.setShadowLayer(4*metrics.density, 0, 2*metrics.density, 0x66000000);
-        tv.setText(mIsCid ? "CyanogenMod " + cmVersion : "Android " + Build.VERSION.RELEASE);
+        tv.setText(mIsCid ? "ORCA 3" : "Android " + Build.VERSION.RELEASE);
         view.addView(tv, lp);
 
         tv = new TextView(this);
@@ -99,7 +99,7 @@ public class PlatLogoActivity extends Activity {
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         mContent = new ImageView(this);
-        mContent.setImageResource(mIsCid ? com.android.internal.R.drawable.cidlogo
+        mContent.setImageResource(mIsCid ? com.android.internal.R.drawable.oclogo
             : com.android.internal.R.drawable.platlogo_alt);
         mContent.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         
@@ -110,7 +110,7 @@ public class PlatLogoActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mToast.show();
-                mContent.setImageResource(mIsCid ? com.android.internal.R.drawable.cidlogo_alt
+                mContent.setImageResource(mIsCid ? com.android.internal.R.drawable.oclogo_alt
                     : com.android.internal.R.drawable.platlogo);
             }
         });
